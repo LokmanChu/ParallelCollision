@@ -69,3 +69,11 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
+
+void ofApp::drawFrameRate()
+{
+	string str;
+	str += "Frame Rate: " + std::to_string(ofGetFrameRate());
+	ofSetColor(ofColor::black);
+	ofDrawBitmapString(str, ofGetWindowWidth() - 170, ofGetWindowHeight() - 10);
+}
