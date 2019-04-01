@@ -1,0 +1,9 @@
+.vs
+obj
+bin
+icon.rc
+ParallelCollision.sln
+ParrellelCollision.vcxproj
+ParrellelCollision.vcxproj.filters
+addons.make
+ParrellelCollision.vcxproj.user
