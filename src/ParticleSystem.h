@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "Particle.h"
-#include <random>
 
 class ParticleForce {
 protected:
@@ -24,9 +23,6 @@ public:
 	void draw();
 	vector<Particle> particles;
 	vector<ParticleForce *> forces;
-
-	void generateParticle();
-	void generateParticle(int);
 };
 
 

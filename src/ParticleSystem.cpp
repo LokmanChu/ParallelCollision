@@ -75,15 +75,6 @@ void ParticleSystem::draw() {
 	}
 }
 
-void ParticleSystem::generateParticle() {
-	Particle * p = new Particle();
-	p->position()
-}
 
-void ParticleSystem::generateParticle(int n) {
-	for (int i = 0; i < n; i++)
-	{
-		generateParticle();
-	}
-}
+
 
