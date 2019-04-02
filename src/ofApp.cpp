@@ -2,17 +2,22 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-
+	ofBackground(ofColor(220, 220, 220));
+	gen = new ParticleGenerator();
+	sys = new ParticleSystem();
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	gen->generateParticle(&sys->particles,100);
+	sys->update();
+	cout << sys->particles.size() << endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
+	drawFrameRate();
+	sys->draw();
 }
 
 //--------------------------------------------------------------

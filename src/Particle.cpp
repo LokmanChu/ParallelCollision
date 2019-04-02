@@ -13,14 +13,12 @@ void Particle::init()
 	acceleration.set(0, 0, 0);
 	position.set(0, 0, 0);
 	forces.set(0, 0, 0);
-	lifespan = 5;
 	radius = 1;
 	damping = 1;
 	mass = 1;
 	color = ofColor(255, 255, 255);
 
 }
-
 
 
 void Particle::draw() {
@@ -49,7 +47,7 @@ void Particle::integrate() {
 }
 
 bool Particle::inside(int x, int y) {
-	return ofVec3f(x, y).distanceSquared(position) <= radius * radius;
+	return ofVec3f(x, y).squareDistance(position) <= radius * radius;
 }
 
 bool Particle::inside(ofVec3f p)
