@@ -26,8 +26,19 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
 
 		void drawFrameRate();
+		void loadVbo();
+		void loadVboPara();
+
+		vector<ofVec3f> * merge(vector<ofVec3f> * A, vector<ofVec3f> * B);
+		void addAll(vector<ofVec3f> * from, vector<ofVec3f> * to);
+		void divide(vector<ofVec3f> * vectors[], int left, int right, bool isLeft);
 
 		ParticleGenerator * gen;
 		ParticleSystem * sys;
+
+		ofTexture  particleTex;
+
+		ofVbo vbo;
+		ofShader shader;
 		
 };
