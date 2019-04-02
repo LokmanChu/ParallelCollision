@@ -19,16 +19,13 @@ void ParticleGenerator::generateParticle(vector<Particle> * particles, int n) {
 }
 
 void ParticleGenerator::generateParticlePara(vector<Particle> * particles, int n) {
-	int nThreads = omp_get_num_threads();
-	vector<vector<Particle> *> vectors;
-	for (int i = 0; i < nThreads; i++) {
-		vectors.push_back(new vector<Particle>);
-	}
-
+	vector<Particle> * vectors[4];
 #pragma omp parallel
 	{
-		int id, i, istart, iend;
+		int id, i, nThreads, istart, iend;
 		id = omp_get_thread_num();
+		nThreads = omp_get_num_threads();
+		vectors[id] = new vector<Particle>;
 		istart = id * n / nThreads;
 		iend = (id + 1) * n / nThreads;
 		if (id == nThreads - 1) iend = n;

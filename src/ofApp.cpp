@@ -9,7 +9,7 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	gen->generateParticle(&sys->particles,100);
+	gen->generateParticlePara(&sys->particles,100);
 	sys->update();
 	cout << sys->particles.size() << endl;
 }
