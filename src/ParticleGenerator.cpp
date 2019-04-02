@@ -11,17 +11,29 @@ void ParticleGenerator::generateParticle(vector<Particle> * particles) {
 	particles->push_back(*p);
 }
 
-void ParticleGenerator::generateParticle(vector<Particle> * particles, int n) {
+void ParticleGenerator::generateParticle(ParticleSystem * sys, int n) {
 	for (int i = 0; i < n; i++)
 	{
-		generateParticle(particles);
+		generateParticle(&sys->particles);
 	}
 }
 
-void ParticleGenerator::generateParticlePara(vector<Particle> * particles, int n) {
+Particle * ParticleGenerator::generateParticlePara() {
+	static thread_local std::mt19937 generator;
+	Particle * p = new Particle();
+	p->position.set(randW(), randH(), 0);
+	std::uniform_real_distribution<float> distrubution(-1.0, 1.0);
+	ofVec3f dir = ofVec3f(distrubution(generator), distrubution(generator), 0);
+	p->velocity.set(dir * 10);
+	p->color.set(randColor());
+	return p;
+}
+
+void ParticleGenerator::generateParticlePara(ParticleSystem * sys, int n) {
 	vector<Particle> * vectors[4];
-#pragma omp parallel
+#pragma omp parallel num_threads(4)
 	{
+		Particle * p;
 		int id, i, nThreads, istart, iend;
 		id = omp_get_thread_num();
 		nThreads = omp_get_num_threads();
@@ -33,30 +45,26 @@ void ParticleGenerator::generateParticlePara(vector<Particle> * particles, int n
 			generateParticle(vectors[id]);
 		}
 	}
-	
-	/*
-	divide(vectors, 0, vectors.size());
-	free(particles);
-	particles = vectors[0];
-	*/
+
+	divide(vectors, 0, 3, true);
+	vector<Particle> * temp = & sys->particles;
+	sys->particles = *merge(temp,vectors[0]);
 }
 
-void ParticleGenerator::merge(vector<Particle> * A, vector<Particle> * B) {
-	vector<Particle> * AB = new vector<Particle>;
-	AB->reserve(A->size() + B->size());
-	AB->insert(AB->end(), A->begin(), A->end());
-	AB->insert(AB->end(), B->begin(), B->end());
-	free(A);
-	free(B);
-	A = AB;
+vector<Particle> * ParticleGenerator::merge(vector<Particle> * A, vector<Particle> * B) {
+	vector<Particle> * AB = new vector<Particle>; cout << "1" << endl;
+	AB->reserve(A->size() + B->size()); cout << "2" << endl;
+	AB->insert(AB->end(), A->begin(), A->end()); cout << "3" << endl;
+	AB->insert(AB->end(), B->begin(), B->end()); cout << "4" << endl;
+	return AB;
 }
 
-void ParticleGenerator::divide(vector<vector<Particle> *> vectors, int left, int right) {
+void ParticleGenerator::divide(vector<Particle> * vectors[], int left, int right, bool isLeft) {
 	if (left >= right) return;
 	int mid = left + (right - left) / 2;
-	divide(vectors, left, mid);
-	divide(vectors, mid + 1, right);
-	merge(vectors[left], vectors[right]);
+	divide(vectors, left, mid, true);
+	divide(vectors, mid + 1, right, false);
+	isLeft ? vectors[left] =  merge(vectors[left], vectors[right]) : vectors[right] = merge(vectors[left], vectors[right]);
 }
 
 int ParticleGenerator::intRand(const int & min, const int & max) {
