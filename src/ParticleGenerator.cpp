@@ -33,7 +33,6 @@ void ParticleGenerator::generateParticlePara(ParticleSystem * sys, int n) {
 	vector<Particle> * vectors[4];
 #pragma omp parallel num_threads(4)
 	{
-		Particle * p;
 		int id, i, nThreads, istart, iend;
 		id = omp_get_thread_num();
 		nThreads = omp_get_num_threads();
@@ -48,13 +47,16 @@ void ParticleGenerator::generateParticlePara(ParticleSystem * sys, int n) {
 
 	divide(vectors, 0, 3, true);
 	addAll(&sys->particles,vectors[0]);
+	for (vector<Particle> * vector : vectors) {
+		delete vector;
+	}
 }
 
 vector<Particle> * ParticleGenerator::merge(vector<Particle> * A, vector<Particle> * B) {
-	vector<Particle> * AB = new vector<Particle>; cout << "1" << endl;
-	AB->reserve(A->size() + B->size()); cout << "2" << endl;
-	AB->insert(AB->end(), A->begin(), A->end()); cout << "3" << endl;
-	AB->insert(AB->end(), B->begin(), B->end()); cout << "4" << endl;
+	vector<Particle> * AB = new vector<Particle>; //cout << "1" << endl;
+	AB->reserve(A->size() + B->size()); //cout << "2" << endl;
+	AB->insert(AB->end(), A->begin(), A->end()); //cout << "3" << endl;
+	AB->insert(AB->end(), B->begin(), B->end()); //cout << "4" << endl;
 	return AB;
 }
 
@@ -69,7 +71,7 @@ void ParticleGenerator::divide(vector<Particle> * vectors[], int left, int right
 	int mid = left + (right - left) / 2;
 	divide(vectors, left, mid, true);
 	divide(vectors, mid + 1, right, false);
-	isLeft ? vectors[left] =  merge(vectors[left], vectors[right]) : vectors[right] = merge(vectors[left], vectors[right]);
+	isLeft ? vectors[left] = merge(vectors[left], vectors[right]) : vectors[right] = merge(vectors[left], vectors[right]);
 }
 
 int ParticleGenerator::intRand(const int & min, const int & max) {
