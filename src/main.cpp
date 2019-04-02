@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "omp.h"
 
 #pragma warning disable
 
@@ -12,4 +13,12 @@ int main( ){
 	// pass in width and height too:
 	ofRunApp(new ofApp());
 
+	/*
+#pragma omp parallel
+	{
+		int ID = omp_get_thread_num();
+		printf("Hello %d", ID);
+		printf("World %d", ID);
+	}
+	*/
 }

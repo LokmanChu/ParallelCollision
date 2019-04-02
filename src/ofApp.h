@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "ParticleSystem.h"
 #include "ParticleGenerator.h"
+#include "omp.h"
+#include <stdlib.h>
 
 class ofApp : public ofBaseApp{
 
@@ -25,7 +27,7 @@ class ofApp : public ofBaseApp{
 
 		void drawFrameRate();
 
-		ParticleGenerator gen;
-		ParticleSystem sys;
+		ParticleGenerator * gen;
+		ParticleSystem * sys;
 		
 };

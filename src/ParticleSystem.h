@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "Particle.h"
+#include "omp.h"
 
 class ParticleForce {
 protected:
