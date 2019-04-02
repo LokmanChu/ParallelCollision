@@ -12,6 +12,7 @@ class ParticleGenerator {
 		void generateParticlePara(ParticleSystem *, int);
 		Particle * generateParticlePara();
 		vector<Particle> * merge(vector<Particle> *, vector<Particle> *);
+		void addAll(vector<Particle> *, vector<Particle> *);
 		void divide(vector<Particle> *[], int, int, bool);
 	
 		int intRand(const int & min, const int & max);

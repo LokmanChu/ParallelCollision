@@ -47,8 +47,7 @@ void ParticleGenerator::generateParticlePara(ParticleSystem * sys, int n) {
 	}
 
 	divide(vectors, 0, 3, true);
-	vector<Particle> * temp = & sys->particles;
-	sys->particles = *merge(temp,vectors[0]);
+	addAll(&sys->particles,vectors[0]);
 }
 
 vector<Particle> * ParticleGenerator::merge(vector<Particle> * A, vector<Particle> * B) {
@@ -57,6 +56,12 @@ vector<Particle> * ParticleGenerator::merge(vector<Particle> * A, vector<Particl
 	AB->insert(AB->end(), A->begin(), A->end()); cout << "3" << endl;
 	AB->insert(AB->end(), B->begin(), B->end()); cout << "4" << endl;
 	return AB;
+}
+
+void ParticleGenerator::addAll(vector<Particle> * from, vector<Particle> * to)
+{
+	from->reserve(from->size() + to->size());
+	from->insert(from->end(), to->begin(), to->end());
 }
 
 void ParticleGenerator::divide(vector<Particle> * vectors[], int left, int right, bool isLeft) {
