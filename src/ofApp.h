@@ -27,7 +27,6 @@ class ofApp : public ofBaseApp{
 
 		void drawFrameRate();
 		void loadVbo();
-		void loadVboPara();
 
 		vector<ofVec3f> * merge(vector<ofVec3f> * A, vector<ofVec3f> * B);
 		void addAll(vector<ofVec3f> * from, vector<ofVec3f> * to);
