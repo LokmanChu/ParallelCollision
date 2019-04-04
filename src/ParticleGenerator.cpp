@@ -3,10 +3,11 @@
 void ParticleGenerator::generateParticle(vector<Particle> * particles) {
 	static thread_local std::mt19937 generator;
 	Particle * p = new Particle();
+	r = p->radius;
 	p->position.set(randW(), randH(), 0);
 	std::uniform_real_distribution<float> distrubution(-1.0, 1.0);
 	ofVec3f dir = ofVec3f( distrubution(generator), distrubution(generator), 0);
-	p->velocity.set(dir * 10);
+	p->velocity.set(dir * 20);
 	p->color.set(randColor());
 	particles->push_back(*p);
 }
@@ -81,11 +82,11 @@ int ParticleGenerator::intRand(const int & min, const int & max) {
 }
 
 int ParticleGenerator::randW() {
-	return intRand(0, ofGetWidth());
+	return intRand(0 + r, ofGetWidth() - r);
 }
 
 int ParticleGenerator::randH() {
-	return intRand(0, ofGetHeight());
+	return intRand(0 + r, ofGetHeight() - r);
 }
 
 ofColor ParticleGenerator::randColor() {

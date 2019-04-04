@@ -20,4 +20,6 @@ class ParticleGenerator {
 		int randW();
 		int randH();
 		ofColor randColor();
+
+		int r;
 };
