@@ -11,7 +11,6 @@ void ofApp::setup(){
 		cout << "Particle Texture File: images/nova.png not found" << endl;
 		ofExit();
 	}
-	handler.gen->generateParticle(handler.sys, 10);
 
 #ifdef TARGET_OPENGLES
 	shader.load("shaders_gles/shader");
@@ -22,10 +21,11 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	handler.sys->update();
 	handler.checkCollisionTime();
 	handler.collisionResolve();
-	handler.sys->update();
 	//cout << sys->particles.size() << endl;
+	handler.gen->generateParticle(handler.sys,1);
 }
 
 //--------------------------------------------------------------
@@ -33,13 +33,15 @@ void ofApp::draw(){
 
 	handler.sys->draw();
 
-	//shader.begin();
-	//loadVbo();
-	//loadVboPara();
-	//particleTex.bind();
-	//vbo.draw(GL_POINTS, 0, (int)sys->particles.size());
-	//particleTex.unbind();
-	//shader.end();
+	/*
+	shader.begin();
+	loadVbo();
+	particleTex.bind();
+	vbo.draw(GL_POINTS, 0, (int)handler.sys->particles.size());
+	particleTex.unbind();
+	shader.end();
+	*/
+	
 
 	drawFrameRate();
 }
