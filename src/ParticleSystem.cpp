@@ -69,7 +69,6 @@ void ParticleSystem::update() {
 }
 
 void ParticleSystem::draw() {
-	#pragma omp parallel for
 	for (int i = 0; i < particles.size(); i++) {
 		particles[i].draw();
 	}
