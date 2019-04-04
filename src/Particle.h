@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+typedef enum Edges {None, Top, Bottom, Left, Right, All};
 
 class Particle {
 public:
@@ -14,12 +15,12 @@ public:
 	float   mass;
 	float   lifespan;
 	float   radius;
+	ofColor color;
 
 	void	init();
 	void    integrate();
 	void    draw();
-	bool	inside(int x, int y);
-	bool	inside(ofVec3f p);
-	ofColor color;
+	bool	collideParticle(Particle * p);
+	Edges	collideEdge(Edges);
 };
 

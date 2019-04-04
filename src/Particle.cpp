@@ -13,20 +13,16 @@ void Particle::init()
 	acceleration.set(0, 0, 0);
 	position.set(0, 0, 0);
 	forces.set(0, 0, 0);
-	radius = 1;
+	radius = 10;
 	damping = 1;
 	mass = 1;
 	color = ofColor(255, 255, 255);
-
 }
 
 
 void Particle::draw() {
-	ofPushMatrix();
-	ofFill();
 	ofSetColor(color);
 	ofDrawSphere(position, radius);
-	ofPopMatrix();
 }
 
 void Particle::integrate() {
@@ -46,13 +42,40 @@ void Particle::integrate() {
 	forces.set(0, 0, 0);
 }
 
-bool Particle::inside(int x, int y) {
-	return ofVec3f(x, y).squareDistance(position) <= radius * radius;
+Edges Particle::collideEdge(Edges e) {
+	bool top, bot, left, right;
+	switch (e)
+	{
+	case All:
+	case Top:
+		top = (position.y - radius) <= 0;
+		//cout << top << endl;
+		if (e == Top) return e;
+	case Bottom:
+		bot = (position.y + radius) >= ofGetWindowHeight();
+		//cout << bot << endl;
+		if (e == Bottom) return e;
+	case Left:
+		left = (position.x - radius) <= 0;
+		//cout << left << endl;
+		if (e == Left) return e;
+	case Right:
+		right = (position.x + radius) >= ofGetWindowWidth();
+		//cout << right << endl;
+		if (e == Right) return e;
+	default:
+		if (top) return Top;
+		if (bot) return Bottom;
+		if (left) return Left;
+		if (right) return Right;
+		return None;
+	}
 }
 
-bool Particle::inside(ofVec3f p)
+bool Particle::collideParticle(Particle * p)
 {
-	return inside(p.x, p.y);
+	int dist = (radius + p->radius);
+	return position.squareDistance(p->position) <= dist * dist;
 }
 
 
