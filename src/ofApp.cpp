@@ -3,9 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofBackground(ofColor(220, 220, 220));
-	gen = new ParticleGenerator();
-
-	sys = new ParticleSystem();
+	handler = CollisionHandler();
 
 	ofDisableArbTex();
 
@@ -13,6 +11,7 @@ void ofApp::setup(){
 		cout << "Particle Texture File: images/nova.png not found" << endl;
 		ofExit();
 	}
+	handler.gen->generateParticle(handler.sys, 10);
 
 #ifdef TARGET_OPENGLES
 	shader.load("shaders_gles/shader");
@@ -23,25 +22,26 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	gen->generateParticlePara(sys,100);
-	sys->update();
-	cout << sys->particles.size() << endl;
+	handler.checkCollisionTime();
+	handler.collisionResolve();
+	handler.sys->update();
+	//cout << sys->particles.size() << endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	drawFrameRate();
-	//sys->draw();
 
-	shader.begin();
+	handler.sys->draw();
 
+	//shader.begin();
 	//loadVbo();
-	loadVboPara();
-	particleTex.bind();
-	vbo.draw(GL_POINTS, 0, (int)sys->particles.size());
-	particleTex.unbind();
+	//loadVboPara();
+	//particleTex.bind();
+	//vbo.draw(GL_POINTS, 0, (int)sys->particles.size());
+	//particleTex.unbind();
+	//shader.end();
 
-	shader.end();
+	drawFrameRate();
 }
 
 //--------------------------------------------------------------
@@ -108,13 +108,13 @@ void ofApp::drawFrameRate()
 }
 
 void ofApp::loadVbo() {
-	if (sys->particles.size() < 1) return;
+	if (handler.sys->particles.size() < 1) return;
 
 	vector<ofVec3f> sizes;
 	vector<ofVec3f> points;
 
-	for (int i = 0; i < sys->particles.size(); i++) {
-		points.push_back(sys->particles[i].position);
+	for (int i = 0; i < handler.sys->particles.size(); i++) {
+		points.push_back(handler.sys->particles[i].position);
 		sizes.push_back(ofVec3f(10));
 	}
 
@@ -127,7 +127,7 @@ void ofApp::loadVbo() {
 }
 
 void ofApp::loadVboPara() {
-	if (sys->particles.size() < 1) return;
+	if (handler.sys->particles.size() < 1) return;
 
 	vector<ofVec3f> sizes;
 	vector<ofVec3f> points;
@@ -142,11 +142,11 @@ void ofApp::loadVboPara() {
 		nThreads = omp_get_num_threads();
 		sizesA[id] = new vector<ofVec3f>;
 		pointsA[id] = new vector<ofVec3f>;
-		istart = id * sys->particles.size() / nThreads;
-		iend = (id + 1) * sys->particles.size() / nThreads;
-		if (id == nThreads - 1) iend = sys->particles.size();
+		istart = id * handler.sys->particles.size() / nThreads;
+		iend = (id + 1) * handler.sys->particles.size() / nThreads;
+		if (id == nThreads - 1) iend = handler.sys->particles.size();
 		for (i = istart; i < iend; i++) {
-			pointsA[id]->push_back(sys->particles[i].position);
+			pointsA[id]->push_back(handler.sys->particles[i].position);
 			sizesA[id]->push_back(ofVec3f(10));
 		}
 	}

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ParticleSystem.h"
-#include "ParticleGenerator.h"
+#include "CollisionHandler.h"
 #include "omp.h"
 #include <stdlib.h>
 
@@ -25,6 +24,8 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+		CollisionHandler handler;
+
 		void drawFrameRate();
 		void loadVbo();
 		void loadVboPara();
@@ -32,9 +33,6 @@ class ofApp : public ofBaseApp{
 		vector<ofVec3f> * merge(vector<ofVec3f> * A, vector<ofVec3f> * B);
 		void addAll(vector<ofVec3f> * from, vector<ofVec3f> * to);
 		void divide(vector<ofVec3f> * vectors[], int left, int right, bool isLeft);
-
-		ParticleGenerator * gen;
-		ParticleSystem * sys;
 
 		ofTexture  particleTex;
 
