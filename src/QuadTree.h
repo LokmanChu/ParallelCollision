@@ -11,18 +11,22 @@ public:
 	
 	ofVec3f a, b;
 	Box * parent;
-	Box * children[4];
+	vector<Box *> children;
 	Quadrant quadrant;
 	vector<Particle *> particles;
 	bool isEdge;
+	bool isLeaf;
 	int edges[2] = { 0,0 };
 	omp_lock_t writelock;
 
 	void addParticle(Particle * p);
 	void findEdges();
 
+	bool inside(Particle * p);
+
 	void testBoxDraw();
 };
+
 
 class QuadTree {
 public:
@@ -30,11 +34,15 @@ public:
 	QuadTree();
 
 	Box * root;
-	Box * children[4];
 	vector<Box *> leafs;
 
 	void generateQuadTree(Box * root, int levels);
-	void divideQuadrants(Box * parent, Box * [], bool isLeaf);
-	void draw();
+	void divideQuadrants(Box * parent, bool isLeaf);
 	void traversal(Box *);
+	void linearize(int level);
+	void incrementBitSet(bitset<8> * bitset);
+	int toDecimal(bitset<8> bitset);
+	void draw();
+	Box * adjacentBox(Box * box, Edges e);
+	void clearTree();
 };
