@@ -2,6 +2,7 @@
 
 #include "ParticleSystem.h"
 #include "ParticleGenerator.h"
+#include "QuadTree.h"
 
 class Pair {
 public:
@@ -16,16 +17,20 @@ public:
 class CollisionHandler {
 public:
 	CollisionHandler();
-
 	ParticleGenerator * gen;
 	ParticleSystem * sys;
 
 	vector<Pair> pairs;
 	vector<Pair> edges;
 	omp_lock_t pairsLock;
+	omp_lock_t edgesLock;
+
+
+	QuadTree * tree;
 
 	void checkCollisionTime();
 	void checkCollisionNSquare();
+	void checkCollisionQTree();
 
 	void collisionResolve();
 };

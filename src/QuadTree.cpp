@@ -3,20 +3,19 @@
 Box::Box(ofVec3f a, ofVec3f b) {
 	this->a = a;
 	this->b = b;
-	omp_init_lock(&writelock);
 	findEdges();
-	isEdge = edges[0] || edges[1];
+	isEdge = edges.any();
+	isLeaf = false;
+	boxIndex = -1;
 }
 
 /*
 	While you could a and b from parent Box and Quadrant, it is less operations to find points a and b 
 	from the parent than to do the calculations for every child box
 */
-Box::Box(ofVec3f a, ofVec3f b, Box * parent, Quadrant q, bool isLeaf, bool isEdge) {
+Box::Box(ofVec3f a, ofVec3f b, bool isLeaf, bool isEdge) {
 	this->a = a;
 	this->b = b;
-	this->parent = parent; 
-	this->quadrant = q;
 	this->isLeaf = isLeaf;
 	if (isLeaf) {
 		omp_init_lock(&writelock);
@@ -34,16 +33,31 @@ void Box::addParticle(Particle * p) {
 }
 
 void Box::findEdges() {
-	if (a.x == 0 || b.x == ofGetWindowWidth()) {
-		edges[0] = a.x == 0 ? Left : Right;
+	if (a.x == 0) {
+		edges.set(Left);
 	}
-	if (a.y == 0 || b.y == ofGetWindowHeight()) {
-		edges[1] = a.y == 0 ? Top : Bottom;
+	if (b.x == ofGetWindowWidth()) {
+		edges.set(Right);
+	}
+	if (a.y == 0) {
+		edges.set(Top);
+	}
+	if (b.y == ofGetWindowHeight()) {
+		edges.set(Bottom);
 	}
 }
 
-bool Box::inside(Particle * p) {
-	return (p->position.x >= a.x && p->position.x < b.x &&  p->position.y >= a.y && p->position.y < b.y);
+/*
+	inside box is x >= min && x < max
+	bitset return: 0001 top, 0010 bottom, 0100 left, 1000 right
+*/
+bitset<4> Box::overlapEdge(Particle * p) {
+	bitset<4> bset(0);
+	if (p->position.x - p->radius < a.x) bset.set(2);
+	else if (p->position.x + p->radius > b.x) bset.set(3);
+	if (p->position.y - p->radius < a.y) bset.set(0);
+	else if (p->position.y + p->radius > b.y) bset.set(1);
+	return bset; 
 }
 
 void Box::testBoxDraw() {
@@ -53,12 +67,14 @@ void Box::testBoxDraw() {
 }
 
 QuadTree::QuadTree() {
-	QuadTree(2);
+
 }
 
 QuadTree::QuadTree(int levels) {
 	this->root = new Box(ofVec3f(0), ofVec3f(ofGetWindowWidth(), ofGetWindowHeight(), 0));
 	generateQuadTree(root, levels);
+	linearize(levels);
+	rowMod = pow(2, levels - 1);
 }
 
 void QuadTree::generateQuadTree(Box * root, int levels) {
@@ -74,10 +90,10 @@ void QuadTree::divideQuadrants(Box * parent, bool isLeaf) {
 	int xMid = (parent->b.x + parent->a.x) / 2;
 	int yMid = (parent->b.y + parent->a.y) / 2;
 	Box * boxes[4];
-	boxes[TL] = new Box(parent->a, ofVec3f(xMid, yMid), parent, TL, isLeaf, parent->edges[0] == Left || parent->edges[1] == Top);
-	boxes[TR] = new Box(ofVec3f(xMid, parent->a.y), ofVec3f(parent->b.x, yMid), parent, TR, isLeaf, parent->edges[0] == Right || parent->edges[1] == Top);
-	boxes[BL] = new Box(ofVec3f(parent->a.x, yMid), ofVec3f(xMid, parent->b.y), parent, BL, isLeaf, parent->edges[0] == Left || parent->edges[1] == Bottom);
-	boxes[BR] = new Box(ofVec3f(xMid, yMid), parent->b, parent, BR, isLeaf, parent->edges[0] == Right || parent->edges[1] == Bottom);
+	boxes[TL] = new Box(parent->a, ofVec3f(xMid, yMid), isLeaf, parent->edges.any());
+	boxes[TR] = new Box(ofVec3f(xMid, parent->a.y), ofVec3f(parent->b.x, yMid), isLeaf, parent->edges.any());
+	boxes[BL] = new Box(ofVec3f(parent->a.x, yMid), ofVec3f(xMid, parent->b.y), isLeaf, parent->edges.any());
+	boxes[BR] = new Box(ofVec3f(xMid, yMid), parent->b, isLeaf, parent->edges.any());
 	for (int i = 0; i < 4; i++) {
 		parent->children.push_back(boxes[i]);
 	}
@@ -93,13 +109,13 @@ void QuadTree::traversal(Box * node) {
 	if (!node->isLeaf) {
 		traversal(node->children[TL]);
 		traversal(node->children[TR]);
-	}
-	else {
-		leafs.push_back(node);
-	}
-	if (!node->isLeaf) {
 		traversal(node->children[BL]);
 		traversal(node->children[BR]);
+	}
+	else {
+		for (Particle * p : node->particles) {
+			cout << p << endl;
+		}
 	}
 }
 
@@ -109,11 +125,13 @@ void QuadTree::linearize(int level) {
 	bitset<8> bsetCol(0);
 	int end = pow(2, level - 1);
 	int base = 0;
+	int count = 0;
 	for (int i = 0; i < end; i++) {
 		base = 2 * toDecimal(bsetRow);
 		for (int j = 0; j < end; j++) {
-			temp.push_back(leafs.at(base + toDecimal(bsetCol)));
-			cout << base + toDecimal(bsetCol) << endl;
+			int tempIndex = base + toDecimal(bsetCol);
+			leafs.at(tempIndex)->boxIndex = count++;
+			temp.push_back(leafs.at(tempIndex));
 			incrementBitSet(&bsetCol);
 		}
 		incrementBitSet(&bsetRow);
@@ -159,32 +177,48 @@ void QuadTree::draw() {
 	}
 }
 
+
+void QuadTree::insert(Particle * p) {
+	int i = 0;
+	Box * box = root;
+	while (!box->isLeaf) {
+		i += p->position.x < (box->a.x + box->b.x) / 2 ? 0 : 1;
+		i += p->position.y < (box->a.y + box->b.y) / 2 ? 0 : 2;
+		box = box->children[i];
+		i = 0;
+	}
+	box->addParticle(p);
+}
+
 /*
 	Returns the adjacent Box of box from Edge e
 */
-Box * adjacentBox(Box * box, Edges e) {
+Box * QuadTree::adjacentBox(Box * box, Edges e) {
 	switch (e) {
 	case Top:
-		if (box->quadrant >= 2) {
-			return box->parent->children[box->quadrant - 2];
-		}
-		else {
-
-		}
-		
+		if (!box->edges.test(Top)) return leafs.at(box->boxIndex - rowMod);
+		break;
 	case Bottom:
+		if (!box->edges.test(Bottom)) return leafs.at(box->boxIndex + rowMod);
 		break;
 	case Left:
+		if (!box->edges.test(Left)) return leafs.at(box->boxIndex - 1);
 		break;
 	case Right:
+		if (!box->edges.test(Right)) return leafs.at(box->boxIndex + 1);
 		break;
+	default:
+		return NULL;
 	}
+	return NULL;
 }
 
 void QuadTree::clearTree() {
+	int count = 0;
 	for (Box * box : leafs)
 	{
 		box->particles.clear();
+		count += box->particles.size();
 	}
 }
 

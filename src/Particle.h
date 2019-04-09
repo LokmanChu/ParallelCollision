@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-typedef enum {None, Top, Bottom, Left, Right, All} Edges;
+typedef enum {Top, Bottom, Left, Right, All , None} Edges;
 
 class Particle {
 public:

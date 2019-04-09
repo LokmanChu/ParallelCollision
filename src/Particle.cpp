@@ -13,7 +13,7 @@ void Particle::init()
 	acceleration.set(0, 0, 0);
 	position.set(0, 0, 0);
 	forces.set(0, 0, 0);
-	radius = 10;
+	radius = 2;
 	damping = 1;
 	mass = 1;
 	color = ofColor(255, 255, 255);
@@ -39,30 +39,37 @@ void Particle::integrate() {
 	velocity += accel * dt;
 	velocity *= damping;
 
+	if (position.y - radius <= 0 || (position.y + radius) >= ofGetWindowHeight()) {
+		velocity.y *= -1;
+	}
+	if (position.x - radius <= 0 || (position.x + radius) >= ofGetWindowWidth()) {
+		velocity.x*=-1;
+	}
+
 	forces.set(0, 0, 0);
 }
 
 Edges Particle::collideEdge(Edges e) {
-	bool top, bot, left, right;
+	bool top = 0, bot = 0, left = 0, right = 0;
 	switch (e)
 	{
 	case All:
 	case Top:
-		top = (position.y - radius) <= 0;
+		top = (this->position.y - this->radius) <= 0;
 		//cout << top << endl;
-		if (e == Top) return e;
+		if (e == Top) return (top ? Top : None);
 	case Bottom:
-		bot = (position.y + radius) >= ofGetWindowHeight();
+		bot = (this->position.y + this->radius) >= ofGetWindowHeight();
 		//cout << bot << endl;
-		if (e == Bottom) return e;
+		if (e == Bottom) return (bot ? Bottom : None);
 	case Left:
-		left = (position.x - radius) <= 0;
-		//cout << left << endl;
-		if (e == Left) return e;
+		left = (this->position.x - this->radius) <= 0;
+		//cout << this->position.x << " " << left << endl;
+		if (e == Left) return (left ? Left : None);
 	case Right:
-		right = (position.x + radius) >= ofGetWindowWidth();
+		right = (this->position.x + this->radius) >= ofGetWindowWidth();
 		//cout << right << endl;
-		if (e == Right) return e;
+		if (e == Right) return (right ? Right : None);
 	default:
 		if (top) return Top;
 		if (bot) return Bottom;

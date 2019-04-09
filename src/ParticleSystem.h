@@ -14,7 +14,6 @@ public:
 
 class ParticleSystem {
 public:
-	void add(const Particle &);
 	void addForce(ParticleForce *);
 	void remove(int);
 	void removeAll();
@@ -22,7 +21,7 @@ public:
 	void update();
 	void reset();
 	void draw();
-	vector<Particle> particles;
+	vector<Particle *> particles;
 	vector<ParticleForce *> forces;
 };
 

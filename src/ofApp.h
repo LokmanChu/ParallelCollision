@@ -38,5 +38,8 @@ class ofApp : public ofBaseApp{
 
 		ofVbo vbo;
 		ofShader shader;
+
+		Particle * p1;
+		Particle * p2;
 		
 };

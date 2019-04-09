@@ -11,6 +11,17 @@ void ofApp::setup(){
 		cout << "Particle Texture File: images/nova.png not found" << endl;
 		ofExit();
 	}
+	//handler.tree->traversal(handler.tree->root);
+	//cout << handler.tree->leafs.size() << endl;
+
+
+	//handler.gen->generateParticle(handler.sys, 1);
+	//handler.gen->generateParticle(handler.sys, 1);
+	//p1 = handler.sys->particles.at(0);
+	//p2 = handler.sys->particles.at(1);
+
+	//p1->position.set(ofVec3f(200, 50, 50)); p1->velocity = ofVec3f(-100,0,0);
+	//p2->position = ofVec3f(200, 50, 50); p2->velocity = ofVec3f(-5,0,0);
 
 #ifdef TARGET_OPENGLES
 	shader.load("shaders_gles/shader");
@@ -24,8 +35,9 @@ void ofApp::update(){
 	handler.sys->update();
 	handler.checkCollisionTime();
 	handler.collisionResolve();
+	//cout << p1->position << endl;
 	//cout << sys->particles.size() << endl;
-	handler.gen->generateParticle(handler.sys,1);
+	handler.gen->generateParticle(handler.sys,10);
 }
 
 //--------------------------------------------------------------
@@ -33,6 +45,9 @@ void ofApp::draw(){
 
 	handler.sys->draw();
 
+	handler.tree->draw();
+
+	//handler.tree->draw(handler.tree->root);
 	/*
 	shader.begin();
 	loadVbo();
@@ -116,7 +131,7 @@ void ofApp::loadVbo() {
 	vector<ofVec3f> points;
 
 	for (int i = 0; i < handler.sys->particles.size(); i++) {
-		points.push_back(handler.sys->particles[i].position);
+		points.push_back(handler.sys->particles[i]->position);
 		sizes.push_back(ofVec3f(10));
 	}
 
@@ -148,7 +163,7 @@ void ofApp::loadVboPara() {
 		iend = (id + 1) * handler.sys->particles.size() / nThreads;
 		if (id == nThreads - 1) iend = handler.sys->particles.size();
 		for (i = istart; i < iend; i++) {
-			pointsA[id]->push_back(handler.sys->particles[i].position);
+			pointsA[id]->push_back(handler.sys->particles[i]->position);
 			sizesA[id]->push_back(ofVec3f(10));
 		}
 	}

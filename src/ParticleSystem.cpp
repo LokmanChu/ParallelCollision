@@ -1,8 +1,5 @@
 #include "ParticleSystem.h"
 
-void ParticleSystem::add(const Particle &p) {
-	particles.push_back(p);
-}
 
 void ParticleSystem::addForce(ParticleForce *f) {
 	forces.push_back(f);
@@ -14,8 +11,8 @@ void ParticleSystem::remove(int i) {
 
 void ParticleSystem::removeAll()
 {
-	vector<Particle>::iterator p = particles.begin();
-	vector<Particle>::iterator tmp;
+	vector<Particle*>::iterator p = particles.begin();
+	vector<Particle*>::iterator tmp;
 
 	while (p != particles.end()) {
 		tmp = particles.erase(p);
@@ -39,8 +36,8 @@ void ParticleSystem::update() {
 	// check if empty and just return
 	if (particles.size() == 0) return;
 
-	vector<Particle>::iterator p = particles.begin();
-	vector<Particle>::iterator tmp;
+	vector<Particle*>::iterator p = particles.begin();
+	vector<Particle*>::iterator tmp;
 
 	if (forces.size() != 0) {
 		// update forces on all particles first 
@@ -48,7 +45,7 @@ void ParticleSystem::update() {
 		for (int i = 0; i < particles.size(); i++) {
 			for (int k = 0; k < forces.size(); k++) {
 				if (!forces[k]->applied)
-					forces[k]->updateForce(&particles[i]);
+					forces[k]->updateForce(particles[i]);
 			}
 		}
 
@@ -64,13 +61,13 @@ void ParticleSystem::update() {
 	// integrate all the particles in the store
 	//
 	for (int i = 0; i < particles.size(); i++)
-		particles[i].integrate();
+		particles[i]->integrate();
 
 }
 
 void ParticleSystem::draw() {
 	for (int i = 0; i < particles.size(); i++) {
-		particles[i].draw();
+		particles[i]->draw();
 	}
 }
 
