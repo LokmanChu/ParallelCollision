@@ -63,7 +63,17 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+	switch (key)
+	{
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+		handler.algorithm = key;
+		break;
+	default:
+		break;
+	}
 }
 
 //--------------------------------------------------------------
