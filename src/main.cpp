@@ -1,6 +1,5 @@
 #include "ofMain.h"
 #include "ofApp.h"
-#include "omp.h"
 
 //========================================================================
 int main( ){
@@ -10,13 +9,4 @@ int main( ){
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
 	ofRunApp(new ofApp());
-
-	/*
-#pragma omp parallel
-	{
-		int ID = omp_get_thread_num();
-		printf("Hello %d", ID);
-		printf("World %d", ID);
-	}
-	*/
 }
