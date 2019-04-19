@@ -7,3 +7,6 @@ ParrellelCollision.vcxproj
 ParrellelCollision.vcxproj.filters
 addons.make
 ParrellelCollision.vcxproj.user
+*.vcxproj
+*.filters
+*.user
