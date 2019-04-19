@@ -16,7 +16,7 @@ public:
 
 class CollisionHandler {
 public:
-	CollisionHandler();
+	CollisionHandler(int levels);
 	ParticleGenerator * gen;
 	ParticleSystem * sys;
 
@@ -25,12 +25,20 @@ public:
 	omp_lock_t pairsLock;
 	omp_lock_t edgesLock;
 
+	int algorithm;
 
 	QuadTree * tree;
 
+	void addPair(Pair pair);
+
 	void checkCollisionTime();
+	void checkCollisionTimeMultiple();
+
 	void checkCollisionNSquare();
+	void checkCollisionNSquarePara1();
+	void checkCollisionNSquarePara2();
 	void checkCollisionQTree();
+	void checkCollisionQTreePara();
 
 	void collisionResolve();
 };
