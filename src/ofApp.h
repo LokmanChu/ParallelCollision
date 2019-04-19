@@ -27,19 +27,19 @@ class ofApp : public ofBaseApp{
 		CollisionHandler handler;
 
 		void drawFrameRate();
-		void loadVbo();
-		void loadVboPara();
+		void loadFbo();
 
 		vector<ofVec3f> * merge(vector<ofVec3f> * A, vector<ofVec3f> * B);
 		void addAll(vector<ofVec3f> * from, vector<ofVec3f> * to);
 		void divide(vector<ofVec3f> * vectors[], int left, int right, bool isLeft);
 
-		ofTexture  particleTex;
+		ofFbo fbo;
+		bool drawGrid;
 
-		ofVbo vbo;
-		ofShader shader;
 
 		Particle * p1;
 		Particle * p2;
+
+
 		
 };

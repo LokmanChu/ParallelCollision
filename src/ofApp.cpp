@@ -3,37 +3,17 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofBackground(ofColor(220, 220, 220));
-	handler = CollisionHandler();
+	handler = CollisionHandler(4);
+	drawGrid = false;
 
-	ofDisableArbTex();
-
-	if (!ofLoadImage(particleTex, "images/nova_0.png")) {
-		cout << "Particle Texture File: images/nova.png not found" << endl;
-		ofExit();
-	}
-	//handler.tree->traversal(handler.tree->root);
-	//cout << handler.tree->leafs.size() << endl;
-
-
-	//handler.gen->generateParticle(handler.sys, 1);
-	//handler.gen->generateParticle(handler.sys, 1);
-	//p1 = handler.sys->particles.at(0);
-	//p2 = handler.sys->particles.at(1);
-
-	//p1->position.set(ofVec3f(200, 50, 50)); p1->velocity = ofVec3f(-100,0,0);
-	//p2->position = ofVec3f(200, 50, 50); p2->velocity = ofVec3f(-5,0,0);
-
-#ifdef TARGET_OPENGLES
-	shader.load("shaders_gles/shader");
-#else
-	shader.load("shaders/shader");
-#endif
+	fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA,4);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	handler.sys->update();
 	handler.checkCollisionTime();
+	//handler.checkCollisionTimeMultiple();
 	handler.collisionResolve();
 	//cout << p1->position << endl;
 	//cout << sys->particles.size() << endl;
@@ -43,11 +23,15 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	handler.sys->draw();
+	//handler.sys->draw();
 
-	handler.tree->draw();
+	if (drawGrid)
+		handler.tree->draw();
+	
+	loadFbo();
+	ofSetColor(255, 255, 255);
+	fbo.draw(0, 0);
 
-	//handler.tree->draw(handler.tree->root);
 	/*
 	shader.begin();
 	loadVbo();
@@ -69,7 +53,10 @@ void ofApp::keyPressed(int key){
 	case '1':
 	case '2':
 	case '3':
-		handler.algorithm = key;
+		handler.algorithm = key-48;
+		break;
+	case 'd':
+		drawGrid = !drawGrid;
 		break;
 	default:
 		break;
@@ -134,60 +121,20 @@ void ofApp::drawFrameRate()
 	ofDrawBitmapString(str, ofGetWindowWidth() - 170, ofGetWindowHeight() - 10);
 }
 
-void ofApp::loadVbo() {
+void ofApp::loadFbo() {
 	if (handler.sys->particles.size() < 1) return;
 
-	vector<ofVec3f> sizes;
-	vector<ofVec3f> points;
-
-	for (int i = 0; i < handler.sys->particles.size(); i++) {
-		points.push_back(handler.sys->particles[i]->position);
-		sizes.push_back(ofVec3f(10));
+	fbo.begin();
+	ofClear(255, 255, 255,0);
+	for (Particle * p : handler.sys->particles) {
+		ofPushStyle();
+		ofSetColor(p->color);
+		ofCircle(p->position, p->radius);
+		ofPopStyle();
 	}
-
-	// upload the data to the vbo
-	//
-	int total = (int)points.size();
-	vbo.clear();
-	vbo.setVertexData(&points[0], total, GL_STATIC_DRAW);
-	vbo.setNormalData(&sizes[0], total, GL_STATIC_DRAW);
+	fbo.end();
 }
 
-void ofApp::loadVboPara() {
-	if (handler.sys->particles.size() < 1) return;
-
-	vector<ofVec3f> sizes;
-	vector<ofVec3f> points;
-
-	vector<ofVec3f> * sizesA[4];
-	vector<ofVec3f> * pointsA[4];
-
-#pragma omp parallel num_threads(4)
-	{
-		int id, i, nThreads, istart, iend;
-		id = omp_get_thread_num();
-		nThreads = omp_get_num_threads();
-		sizesA[id] = new vector<ofVec3f>;
-		pointsA[id] = new vector<ofVec3f>;
-		istart = id * handler.sys->particles.size() / nThreads;
-		iend = (id + 1) * handler.sys->particles.size() / nThreads;
-		if (id == nThreads - 1) iend = handler.sys->particles.size();
-		for (i = istart; i < iend; i++) {
-			pointsA[id]->push_back(handler.sys->particles[i]->position);
-			sizesA[id]->push_back(ofVec3f(10));
-		}
-	}
-
-	divide(sizesA, 0, 3, true);
-	divide(pointsA, 0, 3, true);
-
-	// upload the data to the vbo
-	//
-	int total = (int)points.size();
-	vbo.clear();
-	vbo.setVertexData(&pointsA[0]->at(0), total, GL_STATIC_DRAW);
-	vbo.setNormalData(&sizesA[0]->at(0), total, GL_STATIC_DRAW);
-}
 
 vector<ofVec3f> * ofApp::merge(vector<ofVec3f> * A, vector<ofVec3f> * B) {
 	vector<ofVec3f> * AB = new vector<ofVec3f>; //cout << "1" << endl;
