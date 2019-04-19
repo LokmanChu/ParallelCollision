@@ -14,7 +14,7 @@ void Particle::init()
 	position.set(0, 0, 0);
 	forces.set(0, 0, 0);
 	radius = 2;
-	damping = 1;
+	damping = .99;
 	mass = 1;
 	color = ofColor(255, 255, 255);
 }
@@ -81,8 +81,13 @@ Edges Particle::collideEdge(Edges e) {
 
 bool Particle::collideParticle(Particle * p)
 {
+	float framerate = ofGetFrameRate();
+	if (framerate < 1.0) framerate = 1;
+
+	float dt = 1.0 / framerate;
+
 	int dist = (radius + p->radius);
-	return position.squareDistance(p->position) <= dist * dist;
+	return ofVec3f(position+velocity*dt).squareDistance(ofVec3f(p->position+p->velocity*dt)) <= dist * dist;
 }
 
 
