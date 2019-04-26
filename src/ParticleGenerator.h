@@ -6,7 +6,8 @@
 
 class ParticleGenerator {
 	public:
-
+		ParticleGenerator();
+		~ParticleGenerator();
 		void setSeed(int seed);
 		void generateParticle(vector<Particle *> *);
 		void generateParticle(ParticleSystem *,int);
@@ -16,7 +17,7 @@ class ParticleGenerator {
 		int randH();
 		ofColor randColor();
 
-		std::mt19937 generator;
+		std::default_random_engine * generator;
 
 		int r;
 };

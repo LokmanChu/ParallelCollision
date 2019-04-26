@@ -1,7 +1,17 @@
 #include "ParticleGenerator.h"
 
+ParticleGenerator::ParticleGenerator() {
+	generator = new std::default_random_engine();
+}
+
+ParticleGenerator::~ParticleGenerator() {
+	delete generator;
+}
+
 void ParticleGenerator::setSeed(int seed) {
-	generator.seed(seed);
+	delete generator;
+	generator = new std::default_random_engine();
+	generator->seed(seed);
 }
 
 void ParticleGenerator::generateParticle(vector<Particle *> * particles) {
@@ -9,7 +19,7 @@ void ParticleGenerator::generateParticle(vector<Particle *> * particles) {
 	r = p->radius;
 	p->position.set(randW(), randH(), 0);
 	std::uniform_real_distribution<float> distrubution(-1.0, 1.0);
-	ofVec3f dir = ofVec3f( distrubution(generator), distrubution(generator), 0);
+	ofVec3f dir = ofVec3f( distrubution(*generator), distrubution(*generator), 0);
 	p->velocity.set(dir * intRand(10,100));
 	p->color.set(randColor());
 	particles->push_back(p);
@@ -23,9 +33,8 @@ void ParticleGenerator::generateParticle(ParticleSystem * sys, int n) {
 }
 
 int ParticleGenerator::intRand(const int & min, const int & max) {
-	static thread_local std::mt19937 generator;
 	std::uniform_int_distribution<int> distribution(min, max);
-	return distribution(generator);
+	return distribution(*generator);
 }
 
 int ParticleGenerator::randW() {

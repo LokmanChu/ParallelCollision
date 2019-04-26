@@ -14,7 +14,7 @@ void Particle::init()
 	position.set(0, 0, 0);
 	forces.set(0, 0, 0);
 	radius = 2;
-	damping = .99;
+	damping = .999;
 	mass = 1;
 	color = ofColor(255, 255, 255);
 }

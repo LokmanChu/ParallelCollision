@@ -17,6 +17,14 @@ CollisionHandler::CollisionHandler(int levels) {
 	omp_init_lock(&edgesLock);
 	tree = new QuadTree(levels);
 	algorithm = 0;
+	alg[0] = " N^2"; alg[1] = " N^2 Para"; alg[2] = " QTree"; alg[3] = " QTree Para";
+	printCount = 0;
+}
+
+CollisionHandler::~CollisionHandler() {
+	delete gen;
+	delete sys;
+	delete tree;
 }
 
 void CollisionHandler::addPair(Pair pair) {
@@ -31,35 +39,38 @@ void CollisionHandler::checkCollisionTime() {
 	if (algorithm == 0)
 	{
 		checkCollisionNSquare();
-		cout << "N^2: ";
 	}
 	else if (algorithm == 1) {
-		checkCollisionNSquarePara1();
-		cout << "N^2 Para: ";
+
 	} 
-	else {
+	else if (algorithm == 2) {
 		checkCollisionQTree();
-		cout << "QTree: ";
+	}
+	else {
+		checkCollisionQTreeParaDynamic();
 	}
 	time = ofGetElapsedTimeMillis();
-	cout << sys->particles.size() << ": takes " << time << " Millis " << pairs.size() << endl;
+	if (printCount++ % 30 == 0)
+	{
+		printCount = 1;
+		cout << sys->particles.size() << alg[algorithm] << ": takes " << time << " Millis " << pairs.size() << endl;
+	}
 }
 
 void CollisionHandler::checkCollisionTimeMultiple() {
-	int time;
+	double time1,time2;
 	ofResetElapsedTimeCounter();
-	checkCollisionNSquare();
-	time = ofGetElapsedTimeMicros();
-	cout << "N^2:" << sys->particles.size() << ": takes " << time << " Micros " << pairs.size() << endl;
+	checkCollisionQTreeParaStatic();
+	time1 = ofGetElapsedTimeMicros();
+	cout << "N^2:" << sys->particles.size() << ": takes " << time1 << " Micros " << pairs.size() << endl;
 	pairs.clear();
 	edges.clear();
 
 	ofResetElapsedTimeCounter();
-	checkCollisionNSquarePara1();
-	time = ofGetElapsedTimeMicros();
-	cout << "N^2 Para:" << sys->particles.size() << ": takes " << time << " Micros " << pairs.size() << endl;
-	pairs.clear();
-	edges.clear();
+	checkCollisionQTreeParaDynamic();
+	time2 = ofGetElapsedTimeMicros();
+	cout << "N^2 Para:" << sys->particles.size() << ": takes " << time2 << " Micros " << pairs.size() << endl;
+	cout << (time1 - time2) / time1 << endl;
 }
 
 void CollisionHandler::checkCollisionNSquare() {
@@ -78,8 +89,10 @@ void CollisionHandler::checkCollisionNSquare() {
 	}
 }
 
-void CollisionHandler::checkCollisionNSquarePara1() {
-#pragma omp parallel for schedule(static)
+void CollisionHandler::checkCollisionNSquarePara() {
+#pragma omp parallel num_threads(4)
+	{
+		#pragma omp for schedule(dynamic)
 		for (int i = 0; i < sys->particles.size(); i++)
 		{
 			for (int j = i + 1; j < sys->particles.size(); j++)
@@ -88,39 +101,24 @@ void CollisionHandler::checkCollisionNSquarePara1() {
 					addPair(Pair(sys->particles[i], sys->particles[j]));
 			}
 		}
-}
-
-void CollisionHandler::checkCollisionNSquarePara2() {
-#pragma omp parallel for schedule(static, 4)
-	for (int i = 0; i < sys->particles.size(); i++)
-	{
-		for (int j = i + 1; j < sys->particles.size(); j++)
-		{
-			if (sys->particles[i]->collideParticle(sys->particles[j]))
-				addPair(Pair(sys->particles[i], sys->particles[j]));
-		}
 	}
 }
 
 void CollisionHandler::checkCollisionQTree() {
-	for (int i = 0; i < sys->particles.size(); i++) {
+	
+	for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
 		tree->insert(sys->particles[i]);
 	}
+
 	int setIndex;
-	for (Box * box : tree->leafs)
+	for (Box * box : tree->leafs)							//Loop through each leaf
 	{
-		for (int i = 0; i < box->particles.size(); i++)
+		for (int i = 0; i < box->particles.size(); i++)		//Loop through each Particle in leaf
 		{
-			bitset<4> bset = box->overlapEdge(box->particles.at(i));
-			setIndex = 0;
+			bitset<4> bset = box->overlapEdge(box->particles.at(i));	//List of all Edges
+			setIndex = 0;												//edge counter
 			while (bset.any()) {
-				if (box->edges.test(setIndex)) {
-					//if (5 != sys->particles[i]->collideEdge((Edges)setIndex)) {
-						//cout << (Edges)setIndex << endl;
-						//edges.push_back(Pair(sys->particles[i], setIndex));
-					//}
-				}
-				else if (bset.test(setIndex)) {
+				if (!box->edges.test(setIndex) && bset.test(setIndex)) {
 					Box * adjacent = tree->adjacentBox(box, (Edges)setIndex);
 					for (int j = 0; j < adjacent->particles.size(); j++)
 					{
@@ -136,6 +134,132 @@ void CollisionHandler::checkCollisionQTree() {
 			{
 				if (box->particles[i]->collideParticle(box->particles[j])) {
 					pairs.push_back(Pair(box->particles[i], box->particles[j]));
+				}
+			}
+		}
+	}
+	tree->clearTree();
+}
+
+void CollisionHandler::checkCollisionQTreeParaStatic() {
+	#pragma omp parallel num_threads(4)
+	{
+		#pragma omp for schedule(static)
+		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
+			tree->insert(sys->particles[i]);
+		}
+
+		#pragma omp for schedule(dynamic, 1)
+		for (int index = 0; index < tree->leafs.size(); index++)		//Loop through each leaf
+		{
+			Box * box = tree->leafs.at(index);
+			int setIndex;
+			for (int i = 0; i < box->particles.size(); i++)		//Loop through each Particle in leaf
+			{
+				bitset<4> bset = box->overlapEdge(box->particles.at(i));	//List of all Edges
+				setIndex = 0;												//edge counter
+				while (bset.any()) {
+					if (!box->edges.test(setIndex) && bset.test(setIndex)) {
+						Box * adjacent = tree->adjacentBox(box, (Edges)setIndex);
+						for (int j = 0; j < adjacent->particles.size(); j++)
+						{
+							if (box->particles[i]->collideParticle(adjacent->particles[j])) {
+								addPair(Pair(box->particles[i], adjacent->particles[j]));
+							}
+						}
+					}
+					bset.reset(setIndex);
+					setIndex++;
+				}
+				for (int j = i + 1; j < box->particles.size(); j++)
+				{
+					if (box->particles[i]->collideParticle(box->particles[j])) {
+						addPair(Pair(box->particles[i], box->particles[j]));
+					}
+				}
+			}
+		}
+	}
+	tree->clearTree();
+}
+
+void CollisionHandler::checkCollisionQTreeParaDynamic() {
+#pragma omp parallel num_threads(4)
+	{
+#pragma omp for schedule(static)
+		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
+			tree->insert(sys->particles[i]);
+		}
+
+#pragma omp for schedule(dynamic, 1)
+		for (int index = 0; index < tree->leafs.size(); index++)		//Loop through each leaf
+		{
+			Box * box = tree->leafs.at(index);
+			int setIndex;
+			for (int i = 0; i < box->particles.size(); i++)		//Loop through each Particle in leaf
+			{
+				bitset<4> bset = box->overlapEdge(box->particles.at(i));	//List of all Edges
+				setIndex = 0;												//edge counter
+				while (bset.any()) {
+					if (!box->edges.test(setIndex) && bset.test(setIndex)) {
+						Box * adjacent = tree->adjacentBox(box, (Edges)setIndex);
+						for (int j = 0; j < adjacent->particles.size(); j++)
+						{
+							if (box->particles[i]->collideParticle(adjacent->particles[j])) {
+								addPair(Pair(box->particles[i], adjacent->particles[j]));
+							}
+						}
+					}
+					bset.reset(setIndex);
+					setIndex++;
+				}
+				for (int j = i + 1; j < box->particles.size(); j++)
+				{
+					if (box->particles[i]->collideParticle(box->particles[j])) {
+						addPair(Pair(box->particles[i], box->particles[j]));
+					}
+				}
+			}
+		}
+	}
+	tree->clearTree();
+}
+
+void CollisionHandler::checkCollisionQTreeParaGuided() {
+#pragma omp parallel num_threads(4)
+	{
+#pragma omp for schedule(static)
+		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
+			tree->insert(sys->particles[i]);
+		}
+
+#pragma omp for schedule(guided)
+		for (int index = 0; index < tree->leafs.size(); index++)		//Loop through each leaf
+		{
+			Box * box = tree->leafs.at(index);
+			int setIndex;
+			for (int i = 0; i < box->particles.size(); i++)		//Loop through each Particle in leaf
+			{
+				bitset<4> bset = box->overlapEdge(box->particles.at(i));	//List of all Edges
+				setIndex = 0;												//edge counter
+				while (bset.any()) {
+					if (!box->edges.test(setIndex) && bset.test(setIndex)) {
+						Box * adjacent = tree->adjacentBox(box, (Edges)setIndex);
+						for (int j = 0; j < adjacent->particles.size(); j++)
+						{
+							if (box->particles[i]->collideParticle(adjacent->particles[j])) {
+								addPair(Pair(box->particles[i], adjacent->particles[j]));
+							}
+						}
+					}
+					bset.reset(setIndex);
+					setIndex++;
+				}
+				for (int j = i + 1; j < box->particles.size(); j++)
+				{
+					if (box->particles[i]->collideParticle(box->particles[j])) {
+						addPair(Pair(box->particles[i], box->particles[j]));
+					}
 				}
 			}
 		}

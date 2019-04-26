@@ -11,11 +11,16 @@ public:
 	Testing();
 
 	void runTest();
-	void printTimes();
+
+	int getAlgorithmTime(int);
+	int median(int, int, int);
+
+	void writeFile();
 
 	CollisionHandler * handler;
 	
-	int increment;
+	int algNum;
+	int levels;
 	ofstream file;
-	vector<vector<int>> arrays;
+	vector<int> * data;
 };

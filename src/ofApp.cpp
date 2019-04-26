@@ -1,47 +1,40 @@
 #include "ofApp.h"
 
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofBackground(ofColor(220, 220, 220));
-	handler = CollisionHandler(4);
+	handler = new CollisionHandler(8); //8
 	drawGrid = false;
+	genNum = 100;
 
 	fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA,4);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	handler.sys->update();
-	handler.checkCollisionTime();
-	//handler.checkCollisionTimeMultiple();
-	handler.collisionResolve();
+	handler->sys->update();
+	//handler->checkCollisionTime();
+	handler->checkCollisionTimeMultiple();
+	handler->collisionResolve();
 	//cout << p1->position << endl;
 	//cout << sys->particles.size() << endl;
-	handler.gen->generateParticle(handler.sys,10);
+	handler->gen->generateParticle(handler->sys,genNum);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	//handler.sys->draw();
+	handler->sys->draw();
 
 	if (drawGrid)
-		handler.tree->draw();
+		handler->tree->draw();
 	
+	/*
 	loadFbo();
 	ofSetColor(255, 255, 255);
 	fbo.draw(0, 0);
-
-	/*
-	shader.begin();
-	loadVbo();
-	particleTex.bind();
-	vbo.draw(GL_POINTS, 0, (int)handler.sys->particles.size());
-	particleTex.unbind();
-	shader.end();
 	*/
-	
-
 	drawFrameRate();
 }
 
@@ -53,7 +46,19 @@ void ofApp::keyPressed(int key){
 	case '1':
 	case '2':
 	case '3':
-		handler.algorithm = key-48;
+		handler->algorithm = key-48;
+		break;
+	case 'q':
+		genNum = 0;
+		break;
+	case 'w':
+		genNum = 1;
+		break;
+	case 'e':
+		genNum = 10;
+		break;
+	case 'r':
+		genNum = 100;
 		break;
 	case 'd':
 		drawGrid = !drawGrid;
@@ -122,11 +127,11 @@ void ofApp::drawFrameRate()
 }
 
 void ofApp::loadFbo() {
-	if (handler.sys->particles.size() < 1) return;
+	if (handler->sys->particles.size() < 1) return;
 
 	fbo.begin();
 	ofClear(255, 255, 255,0);
-	for (Particle * p : handler.sys->particles) {
+	for (Particle * p : handler->sys->particles) {
 		ofPushStyle();
 		ofSetColor(p->color);
 		ofCircle(p->position, p->radius);
