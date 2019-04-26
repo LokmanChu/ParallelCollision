@@ -90,7 +90,7 @@ void CollisionHandler::checkCollisionNSquare() {
 }
 
 void CollisionHandler::checkCollisionNSquarePara() {
-#pragma omp parallel num_threads(4)
+#pragma omp parallel
 	{
 		#pragma omp for schedule(dynamic)
 		for (int i = 0; i < sys->particles.size(); i++)
@@ -142,7 +142,7 @@ void CollisionHandler::checkCollisionQTree() {
 }
 
 void CollisionHandler::checkCollisionQTreeParaStatic() {
-	#pragma omp parallel num_threads(4)
+	#pragma omp parallel
 	{
 		#pragma omp for schedule(static)
 		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
@@ -184,14 +184,14 @@ void CollisionHandler::checkCollisionQTreeParaStatic() {
 }
 
 void CollisionHandler::checkCollisionQTreeParaDynamic() {
-#pragma omp parallel num_threads(4)
+#pragma omp parallel
 	{
-#pragma omp for schedule(static)
+		#pragma omp for schedule(static)
 		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
 			tree->insert(sys->particles[i]);
 		}
 
-#pragma omp for schedule(dynamic, 1)
+		#pragma omp for schedule(dynamic, 1)
 		for (int index = 0; index < tree->leafs.size(); index++)		//Loop through each leaf
 		{
 			Box * box = tree->leafs.at(index);
@@ -226,14 +226,14 @@ void CollisionHandler::checkCollisionQTreeParaDynamic() {
 }
 
 void CollisionHandler::checkCollisionQTreeParaGuided() {
-#pragma omp parallel num_threads(4)
+#pragma omp parallel
 	{
-#pragma omp for schedule(static)
+		#pragma omp for schedule(static)
 		for (int i = 0; i < sys->particles.size(); i++) {		//Add every Particle to tree
 			tree->insert(sys->particles[i]);
 		}
 
-#pragma omp for schedule(guided)
+		#pragma omp for schedule(guided)
 		for (int index = 0; index < tree->leafs.size(); index++)		//Loop through each leaf
 		{
 			Box * box = tree->leafs.at(index);
